@@ -1,17 +1,32 @@
 #include "strategy.h"
 #import "math.h"
 
+void switch0and1(int x){
+    if (x==0) {return 1;} else {return 0;}
+}
+
 void Strategy::applyMoveToBlobs(const movement& mv, bidiarray<Sint16> &blobs, Uint16 player) {
     if ( abs(mv.nx-mv.ox)==2 || abs(mv.ny - mv.oy)==2 ) {
         *blobs.set(mv.ox, mv.oy, -1);
     }
     *blobs.set(mv.nx, mv.ny, player);
+
+    for(int xpos = std::max(0,mv.nx-1) ; xpos <= std::min(7,mv.nx+1) ; xpos++) {
+        for(int ypos = std::max(0,mv.ny-1) ; ypos <= std::min(7,mv.ny+1) ; ypos++) {
+            if (*blobs.get(xpos,ypos)==switch0and1(player)) {
+                *blobs.set(xpos,ypos,player);
+            }
+        }
+    }
 }
 
 void Strategy::applyMove (const movement& mv) {
-    if (abs(mv.nx-mv.ox)==1 || abs(mv.ny-mv.oy)==1) {
-        _blobs.set(mv.nx,mn.ny,(int) _current_player);
-    }
+    applyMoveToBlobs(mv,_blobs,_current_player);
+
+    //else {
+    //    _blobs.set(mv.nx,mv.ny,Switch0and1( (int) _current_player );
+    //}
+
 }
 
 Sint32 Strategy::estimateCurrentScore (bidiarray<Sint16> blobs) const {
@@ -52,7 +67,7 @@ vector<movement>& Strategy::computeValidMoves (vector<movement>& valid_moves) co
 }
 
 
-Sint32 Strategy::computeMyMove (int remainingDepth, bidiarray<Sint16> blobs) {
+movement Strategy::computeMyMove (int remainingDepth, bidiarray<Sint16> blobs) {
     vector<movement> valid_moves=new vector<movement>();
     valid_moves=computeValidMoves(valid_moves);
     Sint32 currentMax=-64;
@@ -76,32 +91,10 @@ Sint32 Strategy::computeMyMove (int remainingDepth, bidiarray<Sint16> blobs) {
             }
         }
     }
+    return currentBestMove;
 }
 
 void Strategy::computeBestMove () {
-
-
-    // To be improved...
-
-    //The following code find a valid move.
-    /*
-    movement mv(0,0,0,0);
-    //iterate on starting position
-    for(mv.ox = 0 ; mv.ox < 8 ; mv.ox++) {
-        for(mv.oy = 0 ; mv.oy < 8 ; mv.oy++) {
-            if (_blobs.get(mv.ox, mv.oy) == (int) _current_player) {
-                //iterate on possible destinations
-                for(mv.nx = std::max(0,mv.ox-2) ; mv.nx <= std::min(7,mv.ox+2) ; mv.nx++) {
-                    for(mv.ny = std::max(0,mv.oy-2) ; mv.ny <= std::min(7,mv.oy+2) ; mv.ny++) {
-                        if (_holes.get(mv.nx, mv.ny)) continue;
-                        if (_blobs.get(mv.nx, mv.ny) == -1) goto end_choice;
-                    }
-                }
-            }
-        }*/
-    }
-
-end_choice:
-     _saveBestMove(mv);
+    _saveBestMove( computeMyMove(4,_blobs) );
      return;
 }
