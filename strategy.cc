@@ -12,9 +12,21 @@ void Strategy::applyMove (const movement& mv) {
         // To be completed...
 }
 
-Sint32 Strategy::estimateCurrentScore () const {
-        // To be completed...
-    return 0;
+Sint32 Strategy::estimateCurrentScore (bidiarray<Sint16> blobs) const {
+    int score=0;
+    for (int iteX = 0; iteX <8 ; iteX++) {
+        for (int iteY = 0; iteY<8 ; iteY++) {
+            if (blobs.get(iteX,iteY)) == 0 || blobs.get(iteX,iteY)) == 1) {
+                if (blobs.get(iteX, iteY) == (int) _current_player) {
+                    score++;
+                }
+                else {
+                    score--;
+                }
+            }
+        }
+    }
+    return score;
 }
 
 vector<movement>& Strategy::computeValidMoves (vector<movement>& valid_moves) const {
