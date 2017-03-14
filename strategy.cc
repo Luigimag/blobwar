@@ -9,7 +9,9 @@ void Strategy::applyMoveToBlobs(const movement& mv, bidiarray<Sint16> &blobs, Ui
 }
 
 void Strategy::applyMove (const movement& mv) {
-        // To be completed...
+    if (abs(mv.nx-mv.ox)==1 || abs(mv.ny-mv.oy)==1) {
+        _blobs.set(mv.nx,mn.ny,(int) _current_player);
+    }
 }
 
 Sint32 Strategy::estimateCurrentScore (bidiarray<Sint16> blobs) const {
