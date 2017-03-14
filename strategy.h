@@ -4,6 +4,7 @@
 #include "common.h"
 #include "bidiarray.h"
 #include "movement.h"
+#include <vector>
 
 
 
@@ -56,12 +57,12 @@ public:
         /**
          * Compute the vector containing every possible moves
          */
-    vector<movement>& computeValidMoves (vector<movement>& valid_moves) const;
+    vector<movement>& computeValidMoves (vector<movement>& valid_moves, Sint16 player) const;
 
         /**
          * Estimate the score of the current state of the game
          */
-    Sint32 estimateCurrentScore () const;
+    Sint32 estimateCurrentScore (bidiarray<Sint16> blobs) const;
 
     Sint32 computeMyMove(int remainingDepth, bidiarray<Sint16> blobs);
 
