@@ -43,9 +43,14 @@ public:
     ~Strategy() {}
 
         /**
-         * Apply a move to the current state of blobs
-         * Assumes that the move is valid
+         * Applies a move to the state of blobs in parameters, not the blobs in strategy
          */
+    void applyMoveToBlobs(const movement& mv, bidiarray<Sint16> &blobs, Uint16 player);
+
+    /**
+     *Apply a move to the current state of blobs
+     * Assumes that the move is valid
+     */
     void applyMove (const movement& mv);
 
         /**
