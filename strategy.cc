@@ -10,7 +10,7 @@ void Strategy::applyMoveToBlobs(const movement& mv, bidiarray<Sint16> &blobs, Ui
 
 void Strategy::applyMove (const movement& mv) {
     if (abs(mv.nx-mv.ox)==1 || abs(mv.ny-mv.oy)==1) {
-        _blobs.set(mv.nx,mn.ny,(int) _current_player);
+        _blobs.set(mv.nx,mv.ny,(int) _current_player);
     }
 }
 
