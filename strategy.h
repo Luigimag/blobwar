@@ -57,7 +57,7 @@ public:
         /**
          * Compute the vector containing every possible moves
          */
-    vector<movement>& computeValidMoves (vector<movement>& valid_moves, Sint16 player) const;
+    vector<movement>& computeValidMoves (vector<movement>& valid_moves, bidiarray<Sint16> blobs, Sint16 player) const;
 
         /**
          * Estimate the score of the current state of the game
