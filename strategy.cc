@@ -64,7 +64,7 @@ vector<movement>& Strategy::computeValidMoves (vector<movement>& valid_moves, Si
 }
 
 
-Sint32 Strategy::computeMyMove (int remainingDepth, bidiarray<Sint16> blobs) {
+Sint32 Strategy::computeMyMove (int remainingDepth, bidiarray<Sint16> blobs, Sint32 limit) {
     cout<<"Entering computeMyMove\n";
     vector<movement>* valid_moves=new vector<movement>();
     *valid_moves=computeValidMoves(*valid_moves,_current_player);
@@ -82,23 +82,20 @@ Sint32 Strategy::computeMyMove (int remainingDepth, bidiarray<Sint16> blobs) {
         else {
             bidiarray<Sint16>* newBlobs=new bidiarray<Sint16>(blobs);
             applyMoveToBlobs(*it,*newBlobs,(int) _current_player);
-            current=computeYourMove(remainingDepth-1,*newBlobs);
+            current=computeYourMove(remainingDepth-1,*newBlobs,currentMax);
+	    /*if (current>=limit) {
+		break;
+		}*/
             if (current>currentMax) {
                 currentMax=current;
                 currentBestMove=*it;
             }
         }
     }
-    cout << "MyMove :";
-    cout << unsigned(currentBestMove.ox);
-    cout << unsigned(currentBestMove.oy);
-    cout << unsigned(currentBestMove.nx);
-    cout << unsigned(currentBestMove.ny);
- 
     return currentMax;
 }
 
-Sint32 Strategy::computeYourMove(int remainingDepth, bidiarray<Sint16> blobs) {
+Sint32 Strategy::computeYourMove(int remainingDepth, bidiarray<Sint16> blobs, Sint32 limit) {
     cout<<"Entering computeYourMove\n";
     vector<movement>* valid_moves=new vector<movement>();
     *valid_moves=computeValidMoves(*valid_moves,switch0and1(_current_player));
@@ -116,38 +113,36 @@ Sint32 Strategy::computeYourMove(int remainingDepth, bidiarray<Sint16> blobs) {
         else {
             bidiarray<Sint16>* newBlobs=new bidiarray<Sint16>(blobs);
             applyMoveToBlobs(*it,*newBlobs,(int) !_current_player);
-            current=computeMyMove(remainingDepth-1,*newBlobs);
+            current=computeMyMove(remainingDepth-1,*newBlobs,currentMin);
+	    /*if (current <= limit) {
+		break;
+		}*/
             if (current<currentMin) {
                 currentMin=current;
                 currentBestMove=*it;
             }
         }
     }
-    cout << "YourMove :";
-    cout << unsigned(currentBestMove.ox);
-    cout << unsigned(currentBestMove.oy);
-    cout << unsigned(currentBestMove.nx);
-    cout << unsigned(currentBestMove.ny);
     return currentMin;
 }
 
 void Strategy::computeBestMove () {
-    cout<<"Entering computeBestMove\n";
-    vector<movement>* valid_moves=new vector<movement>();
-    *valid_moves=computeValidMoves(*valid_moves,_current_player);
-    Sint32 currentMax=-64;
-    Sint32 current=0;
-    movement currentBestMove(0,0,0,0);
-    for (auto it = valid_moves->begin(); it != valid_moves->end(); ++it) {
-	bidiarray<Sint16>* newBlobs=new bidiarray<Sint16>(_blobs);
-	applyMoveToBlobs(*it,*newBlobs,(int) _current_player);
-	current=computeYourMove(4 -1,*newBlobs);
-	if (current>currentMax) {
-	    currentMax=current;
-	    currentBestMove=*it;
-        }
+    for (int i = 1; i < 50; i++) {
+	vector<movement>* valid_moves=new vector<movement>();
+	*valid_moves=computeValidMoves(*valid_moves,_current_player);
+	Sint32 currentMax=-64;
+	Sint32 current=0;
+	movement currentBestMove(0,0,0,0);
+	for (auto it = valid_moves->begin(); it != valid_moves->end(); ++it) {
+	    bidiarray<Sint16>* newBlobs=new bidiarray<Sint16>(_blobs);
+	    applyMoveToBlobs(*it,*newBlobs,(int) _current_player);
+	    current=computeYourMove(i-1,*newBlobs,currentMax);
+	    if (current>currentMax) {
+		currentMax=current;
+		currentBestMove=*it;
+	    }
+	}
+	_saveBestMove(currentBestMove);
     }
-    
-    _saveBestMove(currentBestMove);
     return;
 }

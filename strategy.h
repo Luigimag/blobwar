@@ -64,9 +64,9 @@ public:
          */
     Sint32 estimateCurrentScore (bidiarray<Sint16> blobs) const;
 
-    Sint32 computeMyMove(int remainingDepth, bidiarray<Sint16> blobs);
+    Sint32 computeMyMove(int remainingDepth, bidiarray<Sint16> blobs, Sint32 limit);
 
-    Sint32 computeYourMove(int remainingDepth, bidiarray<Sint16> blobs);
+    Sint32 computeYourMove(int remainingDepth, bidiarray<Sint16> blobs, Sint32 limit);
         /**
          * Find the best move.
          */
