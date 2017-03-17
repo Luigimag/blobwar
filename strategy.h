@@ -10,7 +10,7 @@
 
 class Strategy {
 
-private:
+ private:
     //! array containing all blobs on the board
     bidiarray<Sint16> _blobs;
     //! an array of booleans indicating for each cell whether it is a hole or not.
@@ -23,29 +23,29 @@ private:
     //! Only the last move saved will be used.
     void (*_saveBestMove)(movement&);
 
-public:
-        // Constructor from a current situation
+ public:
+    // Constructor from a current situation
     Strategy (bidiarray<Sint16>& blobs,
-              const bidiarray<bool>& holes,
-              const Uint16 current_player,
+	      const bidiarray<bool>& holes,
+	      const Uint16 current_player,
               void (*saveBestMove)(movement&))
-            : _blobs(blobs),_holes(holes), _current_player(current_player), _saveBestMove(saveBestMove)
-        {
-        }
+	: _blobs(blobs),_holes(holes), _current_player(current_player), _saveBestMove(saveBestMove)
+    {
+    }
 
 
 
-        // Copy constructor
+    // Copy constructor
     Strategy (const Strategy& St)
-            : _blobs(St._blobs), _holes(St._holes),_current_player(St._current_player)
+	: _blobs(St._blobs), _holes(St._holes),_current_player(St._current_player)
         {}
 
-        // Destructor
+    // Destructor
     ~Strategy() {}
 
-        /**
-         * Applies a move to the state of blobs in parameters, not the blobs in strategy
-         */
+    /**
+     * Applies a move to the state of blobs in parameters, not the blobs in strategy
+     */
     void applyMoveToBlobs(const movement& mv, bidiarray<Sint16> &blobs, Uint16 player);
 
     /**
@@ -54,24 +54,36 @@ public:
      */
     void applyMove (const movement& mv);
 
-        /**
-         * Compute the vector containing every possible moves
-         */
+    /**
+     * Compute the vector containing every possible moves
+     */
     vector<movement>& computeValidMoves (vector<movement>& valid_moves, bidiarray<Sint16> blobs, Sint16 player) const;
 
-        /**
-         * Estimate the score of the current state of the game
-         */
+    /**
+     * Estimate the score of the current state of the game
+     */
     Sint32 estimateCurrentScore (bidiarray<Sint16> blobs) const;
 
+    /**
+     * Max layers of the MinMax algorithm
+     * blobs : the position of blobs in the current iteration
+     * limit : the lowest score that rules the node out
+     */
     Sint32 computeMyMove(int remainingDepth, bidiarray<Sint16> blobs, Sint32 limit);
 
+    /**
+     * Min layers of the MinMax algorithm
+     * blobs : the position of blobs in the current iteration
+     * limit : the highest score that rules the node out
+     */
     Sint32 computeYourMove(int remainingDepth, bidiarray<Sint16> blobs, Sint32 limit);
-        /**
-         * Find the best move.
-         */
-    void computeBestMove ();
 
+    /**
+     * Finds the best move.
+     * Initializer of the recursive process.
+     * Therefore, behaves similarly to computeMyMove, but saves the move at the end.
+     */
+    void computeBestMove ();
 
 };
 
