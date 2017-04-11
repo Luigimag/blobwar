@@ -62,21 +62,21 @@ class Strategy {
     /**
      * Estimate the score of the current state of the game
      */
-    Sint32 estimateCurrentScore (bidiarray<Sint16> blobs) const;
+    float estimateCurrentScore (bidiarray<Sint16> blobs) const;
 
     /**
      * Max layers of the MinMax algorithm
      * blobs : the position of blobs in the current iteration
      * limit : the lowest score that rules the node out
      */
-    Sint32 computeMyMove(int remainingDepth, bidiarray<Sint16> blobs, Sint32 limit);
+    float computeMyMove(int remainingDepth, bidiarray<Sint16> blobs, float limit);
 
     /**
      * Min layers of the MinMax algorithm
      * blobs : the position of blobs in the current iteration
      * limit : the highest score that rules the node out
      */
-    Sint32 computeYourMove(int remainingDepth, bidiarray<Sint16> blobs, Sint32 limit);
+    float computeYourMove(int remainingDepth, bidiarray<Sint16> blobs, float limit);
 
     /**
      * Finds the best move.

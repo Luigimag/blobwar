@@ -1,4 +1,5 @@
 #include "strategy.h"
+#include <stdio.h>
 #include <math.h>
 #include <omp.h>
 void Strategy::applyMoveToBlobs(const movement& mv, bidiarray<Sint16> &blobs, Uint16 player) {
@@ -20,21 +21,49 @@ void Strategy::applyMove (const movement& mv) {
     applyMoveToBlobs(mv,_blobs,_current_player);
 }
 
-Sint32 Strategy::estimateCurrentScore (bidiarray<Sint16> blobs) const {
+float Strategy::estimateCurrentScore (bidiarray<Sint16> blobs) const {
     //Score = number of allied blobs - number of enemy blobs
-    int score=0;
+    float score=0;
+    int nb_blob = 0;
+    int nb_trou = 0;
+    int prot_me = 0;
+    int prot_you = 0;
     for (int iteX = 0; iteX <8 ; iteX++) {
 	for (int iteY = 0; iteY<8 ; iteY++) {
-	    if (blobs.get(iteX,iteY) == 0 || blobs.get(iteX,iteY) == 1) {
+	    if (_holes.get(iteX,iteY)) {
+		nb_trou++;
+	    } else 
+	    if (blobs.get(iteX,iteY) == 0 || blobs.get(iteX,iteY) == 1) { 
+	        
+		int isProtected = 1;
+		for (int xpos = std::max(0,iteX-1); xpos <= std::min(7,iteX+1);xpos++) {
+		    for (int ypos = std::max(0,iteY-1); ypos <= std::min(7,iteY+1); ypos++) {
+			if (blobs.get(xpos,ypos)!=blobs.get(iteX,iteY)&&!_holes.get(xpos,ypos)) {
+			    isProtected = 0;
+			}
+		    }
+		}
 		if (blobs.get(iteX, iteY) == (int) _current_player) {
-		    score++;
+		    score+=1;
+		    nb_blob++;
+		    if (isProtected) {
+			prot_me++;
+		    }
 		}
 		else {
-		    score--;
+		    score-=1;
+		    nb_blob++;
+		    if (isProtected) {
+			prot_you++;
+		    }
 		}
+		   
+		
 	    }
 	}
     }
+    float avance = (float)nb_blob / (float)(64 - nb_trou);
+    score = score - (prot_me-prot_you)*exp(1)*0.5*avance*log(avance);
     return score;
 }
 
@@ -73,14 +102,14 @@ vector<movement>& Strategy::computeValidMoves (vector<movement>& valid_moves, bi
 }
 
 
-Sint32 Strategy::computeMyMove (int remainingDepth, bidiarray<Sint16> blobs, Sint32 limit) {
+float Strategy::computeMyMove (int remainingDepth, bidiarray<Sint16> blobs, float limit) {
     vector<movement>* valid_moves=new vector<movement>();
     *valid_moves=computeValidMoves(*valid_moves,blobs,_current_player);
     if (valid_moves->empty()) {
 	return estimateCurrentScore(blobs);
     }
-    Sint32 currentMax=-64; //Minimum possible value
-    Sint32 currentScore=0;
+    float currentMax=(float)(-64); //Minimum possible value
+    float currentScore=0;
     for (auto it = valid_moves->begin(); it != valid_moves->end(); ++it) {
 	//Clones blobs to build the alternate situation on which we will work in the incoming iterations
 	bidiarray<Sint16>* newBlobs=new bidiarray<Sint16>(blobs);
@@ -109,14 +138,14 @@ Sint32 Strategy::computeMyMove (int remainingDepth, bidiarray<Sint16> blobs, Sin
     return currentMax;
 }
 
-Sint32 Strategy::computeYourMove(int remainingDepth, bidiarray<Sint16> blobs, Sint32 limit) {
+float Strategy::computeYourMove(int remainingDepth, bidiarray<Sint16> blobs, float limit) {
     vector<movement>* valid_moves=new vector<movement>();
     *valid_moves=computeValidMoves(*valid_moves,blobs,!_current_player);
     if (valid_moves->empty()) {
 	return estimateCurrentScore(blobs);
     }
-    Sint32 currentMin=64; //Maximum possible value
-    Sint32 currentScore=0;
+    float currentMin=64.0; //Maximum possible value
+    float currentScore=0;
     for (auto it = valid_moves->begin(); it != valid_moves->end(); ++it) {
 	//clones blobs to build the alternate situation on which we will work in the incoming iterations
 	bidiarray<Sint16>* newBlobs=new bidiarray<Sint16>(blobs);
@@ -149,8 +178,8 @@ void Strategy::computeBestMove () {
     for (int i = 1; i < 50; i++) {
 	vector<movement>* valid_moves=new vector<movement>();
 	*valid_moves=computeValidMoves(*valid_moves,_blobs,_current_player);
-	Sint32 currentMax=-65; // < -64, so that (0,0,0,0) always gets overriden
-	Sint32 currentScore=0;
+	float currentMax=(float)-65; // < -64, so that (0,0,0,0) always gets overriden
+	float currentScore=0;
 	movement currentBestMove(0,0,0,0);
 	#pragma omp parallel for
 	for (auto it = valid_moves->begin(); it < valid_moves->end(); ++it) {
