@@ -1,7 +1,6 @@
 #include "strategy.h"
 #include <math.h>
 #include <omp.h>
-
 void Strategy::applyMoveToBlobs(const movement& mv, bidiarray<Sint16> &blobs, Uint16 player) {
     if ( abs(mv.nx-mv.ox)==2 || abs(mv.ny - mv.oy)==2 ) {
 	blobs.set(mv.ox, mv.oy, -1);
@@ -54,7 +53,7 @@ vector<movement>& Strategy::computeValidMoves (vector<movement>& valid_moves, bi
 			}
 		    }
 		}
-		
+
 		for(int xpos = std::max(0,xblob-2) ; xpos <= std::min(7,xblob+2) ; xpos++) {
 		    for(int ypos = std::max(0,yblob-2) ; ypos <= std::min(7,yblob+2) ; ypos++) {
 			if (_holes.get(xpos, ypos)) continue;
@@ -82,34 +81,10 @@ Sint32 Strategy::computeMyMove (int remainingDepth, bidiarray<Sint16> blobs, Sin
     }
     Sint32 currentMax=-64; //Minimum possible value
     Sint32 currentScore=0;
-
-    auto it = valid_moves->begin();
-    bidiarray<Sint16>* newBlobs=new bidiarray<Sint16>(blobs);
-    applyMoveToBlobs(*it,*newBlobs,(int) _current_player);
-    if (remainingDepth == 0) {
-	currentScore=estimateCurrentScore(*newBlobs);
-	if (currentScore>currentMax) {
-	    currentMax=currentScore;
-	}
-    }
-    else {
-	currentScore=computeYourMove(remainingDepth-1,*newBlobs,currentMax);
-	if (currentScore>currentMax) {
-	    currentMax=currentScore;
-	}
-    }
-    if (currentScore>=limit) {
-	//Condition for exploration cut.
-	delete valid_moves;
-	return currentScore;	
-    }
-    delete newBlobs;
-
-    #pragma omp parallel for
-    for (auto it2=it++; it2 < valid_moves->end(); ++it2) {
+    for (auto it = valid_moves->begin(); it != valid_moves->end(); ++it) {
 	//Clones blobs to build the alternate situation on which we will work in the incoming iterations
-        newBlobs=new bidiarray<Sint16>(blobs);
-	applyMoveToBlobs(*(it2),*newBlobs,(int) _current_player);
+	bidiarray<Sint16>* newBlobs=new bidiarray<Sint16>(blobs);
+	applyMoveToBlobs(*it,*newBlobs,(int) _current_player);
 	if (remainingDepth == 0) {
 	    currentScore=estimateCurrentScore(*newBlobs);
 	    if (currentScore>currentMax) {
@@ -122,13 +97,17 @@ Sint32 Strategy::computeMyMove (int remainingDepth, bidiarray<Sint16> blobs, Sin
 		currentMax=currentScore;
 	    }
 	}
+	if (currentScore>=limit) {
+	    //Condition for exploration cut.
+	    currentMax = currentScore;
+	    break;
+	}
 
 	delete newBlobs;
     }
     delete valid_moves;
     return currentMax;
 }
-
 
 Sint32 Strategy::computeYourMove(int remainingDepth, bidiarray<Sint16> blobs, Sint32 limit) {
     vector<movement>* valid_moves=new vector<movement>();
@@ -138,32 +117,10 @@ Sint32 Strategy::computeYourMove(int remainingDepth, bidiarray<Sint16> blobs, Si
     }
     Sint32 currentMin=64; //Maximum possible value
     Sint32 currentScore=0;
-    auto it = valid_moves->begin();
-    bidiarray<Sint16>* newBlobs=new bidiarray<Sint16>(blobs);
-    applyMoveToBlobs(*it,*newBlobs,(int) !_current_player);
-    if (remainingDepth == 0) {
-	currentScore=estimateCurrentScore(*newBlobs);
-	if (currentScore<currentMin) {
-	    currentMin=currentScore;
-	}
-    }
-    else {
-	currentScore=computeMyMove(remainingDepth-1,*newBlobs,currentMin);
-	if (currentScore<currentMin) {
-	    currentMin=currentScore;
-	}
-    }
-    if (currentScore <= limit) {
-	//Condition for exploration cut.
-	delete valid_moves;
-	return currentScore;
-    }	
-    delete newBlobs;
-    #pragma omp parallel for
-    for (auto it2=it++; it2 <  valid_moves->end(); ++it2) {
+    for (auto it = valid_moves->begin(); it != valid_moves->end(); ++it) {
 	//clones blobs to build the alternate situation on which we will work in the incoming iterations
-        newBlobs=new bidiarray<Sint16>(blobs);
-	applyMoveToBlobs(*it2,*newBlobs,(int) !_current_player);
+	bidiarray<Sint16>* newBlobs=new bidiarray<Sint16>(blobs);
+	applyMoveToBlobs(*it,*newBlobs,(int) !_current_player);
 	if (remainingDepth == 0) {
 	    currentScore=estimateCurrentScore(*newBlobs);
 	    if (currentScore<currentMin) {
@@ -176,6 +133,12 @@ Sint32 Strategy::computeYourMove(int remainingDepth, bidiarray<Sint16> blobs, Si
 		currentMin=currentScore;
 	    }
 	}
+	if (currentScore <= limit) {
+	    //Condition for exploration cut.
+	    currentMin = currentScore;
+	    break;
+	}
+
 	delete newBlobs;
     }
     delete valid_moves;
